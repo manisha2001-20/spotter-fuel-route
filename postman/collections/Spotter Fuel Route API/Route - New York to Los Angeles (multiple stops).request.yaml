@@ -1,0 +1,31 @@
+$kind: http-request
+url: "{{baseUrl}}/api/route/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "start": "New York, NY",
+      "finish": "Los Angeles, CA"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('each stop: cost = gallons x price', () => d.fuel_stops.forEach(s =>
+        pm.expect(Math.abs(s.gallons_purchased * s.price_per_gallon - s.cost)).to.be.at.most(0.0051)));
+      pm.test('total = sum of stop costs', () => {
+        const sum = d.fuel_stops.reduce((a, s) => a + s.cost, 0);
+        pm.expect(Math.abs(sum - d.summary.total_fuel_cost)).to.be.below(0.006); });
+      pm.test('gallons used = miles / 10', () =>
+        pm.expect(Math.abs(d.summary.total_gallons_used - d.route.distance_miles / 10)).to.be.below(0.01));
+      pm.test('tank never above 50 gal', () => d.fuel_stops.forEach(s => pm.expect(s.fuel_on_departure_gallons).to.be.at.most(50)));
+      pm.test('no leg longer than 500 miles', () => {
+        const m = d.fuel_stops.map(s => s.mile_marker); const pts = [0, ...m, d.route.distance_miles];
+        for (let i = 1; i < pts.length; i++) pm.expect(pts[i] - pts[i-1]).to.be.at.most(500.1); });
+      pm.test('at most 3 external API calls', () => pm.expect(d.meta.external_api_calls.total).to.be.at.most(3));
+    language: text/javascript
+order: 3000

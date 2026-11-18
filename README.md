@@ -48,7 +48,10 @@ No API keys are needed. To change any setting (see `.env.example`), copy `.env.e
 | `GET` | `/api/health/` | Liveness check plus a summary of the loaded dataset |
 | `GET` | `/` | Map page. `/?start=Dallas, TX&finish=Houston, TX` plans immediately |
 
-A Postman collection with every demo request is in [`docs/postman_collection.json`](docs/postman_collection.json).
+A Postman collection has every demo request, each with tests that re-check the fuel arithmetic (9 requests, 39 checks). It comes in two formats:
+
+- [`docs/postman_collection.json`](docs/postman_collection.json): v2.1 JSON. Use **Import** in a regular Postman workspace, or run it with Newman.
+- [`postman/collections/Spotter Fuel Route API/`](postman/collections/): v3 YAML, the format Postman 12's Local View needs when a Git folder is connected. Postman picks it up automatically from this repository.
 
 ### `POST /api/route/`
 

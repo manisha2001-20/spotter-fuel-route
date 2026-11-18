@@ -1,0 +1,4 @@
+$kind: collection
+description: Demo requests for the fuel route API. Start the server (python manage.py runserver) and send in order. Each request has tests (see the Test Results tab) that re-check the fuel arithmetic. Change the baseUrl collection variable if the server is not on [http://127.0.0.1:8000](http://127.0.0.1:8000).
+variables:
+  baseUrl: http://127.0.0.1:8000

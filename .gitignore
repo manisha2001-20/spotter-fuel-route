@@ -24,3 +24,7 @@ db.sqlite3-journal
 .idea/
 .DS_Store
 Thumbs.db
+
+# Postman Local View: workspace link and per-workspace globals stay local
+.postman/
+postman/globals/

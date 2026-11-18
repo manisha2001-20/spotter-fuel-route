@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/route/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "start": "Anchorage, AK",
+      "finish": "Seattle, WA"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 422', () => pm.response.to.have.status(422));
+      pm.test('error code no_feasible_fuel_plan', () => pm.expect(pm.response.json().error.code).to.eql('no_feasible_fuel_plan'));
+    language: text/javascript
+order: 9000
