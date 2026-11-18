@@ -1,0 +1,2 @@
+# Keep the provided dataset byte-for-byte identical on every OS
+data/*.csv -text
