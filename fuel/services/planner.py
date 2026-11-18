@@ -74,6 +74,13 @@ def plan_trip(start_query: str, finish_query: str, initial_fuel_gallons: float =
     for n, p in enumerate(purchases, start=1):
         s = p.station.payload
         gallons = round(p.purchased_miles / mpg, 3)
+        # The optimiser sees start-window stations at mile 0; physically the
+        # vehicle has already driven `s.position_miles` to reach the station.
+        # Report real tank levels. If the tank was (or would be) empty on
+        # arrival, part of the purchase pays for the drive from the origin.
+        shift = s.position_miles - p.station.position_miles  # > 0 only for start-window stops
+        physical_arrival = p.arrival_fuel_miles - shift
+        from_origin = max(0.0, -physical_arrival)
         stops.append({
             "stop_number": n,
             "station": {
@@ -84,9 +91,10 @@ def plan_trip(start_query: str, finish_query: str, initial_fuel_gallons: float =
             "mile_marker": round(s.position_miles, 1),
             "distance_from_route_miles": round(s.offset_miles, 1),
             "price_per_gallon": s.station.price,
-            "fuel_on_arrival_gallons": round(p.arrival_fuel_miles / mpg, 3),
+            "fuel_on_arrival_gallons": round(max(0.0, physical_arrival) / mpg, 3),
             "gallons_purchased": gallons,
-            "fuel_on_departure_gallons": round(p.departure_fuel_miles / mpg, 3),
+            "gallons_for_drive_from_origin": round(from_origin / mpg, 3),
+            "fuel_on_departure_gallons": round((p.departure_fuel_miles - shift) / mpg, 3),
             "cost": round(gallons * s.station.price, 2),
         })
 
@@ -134,7 +142,8 @@ def plan_trip(start_query: str, finish_query: str, initial_fuel_gallons: float =
                 "Stations are located at their city's centre (the dataset has no coordinates). "
                 "mile_marker is the nearest point on the route; the short detour to the station is not counted.",
                 "With an empty starting tank, the first fill-up is made at a station within start_window_miles "
-                "of the origin, and the fuel for those first miles is bought there.",
+                "of the origin, and the fuel for those first miles is bought there "
+                "(shown as gallons_for_drive_from_origin; departure = arrival + purchased - that amount).",
             ],
         },
         "meta": {

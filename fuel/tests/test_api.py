@@ -168,12 +168,17 @@ def test_long_route_plan_is_consistent_and_within_range(client, stations, upstre
     for s in stops:
         assert s["cost"] == round(s["gallons_purchased"] * s["price_per_gallon"], 2)
         assert s["fuel_on_departure_gallons"] == pytest.approx(
-            s["fuel_on_arrival_gallons"] + s["gallons_purchased"], abs=0.002)
+            s["fuel_on_arrival_gallons"] + s["gallons_purchased"] - s["gallons_for_drive_from_origin"], abs=0.002)
         assert s["fuel_on_departure_gallons"] <= RANGE / MPG + 1e-6
         assert s["gallons_purchased"] > 0
 
-    # Fuel continuity between consecutive stops.
-    for a, b in zip(stops[1:], stops[2:]):
+    # The first fill-up (empty tank, ~5 mi from the origin) also pays for those first miles.
+    assert stops[0]["fuel_on_arrival_gallons"] == 0
+    assert stops[0]["gallons_for_drive_from_origin"] == pytest.approx(stops[0]["mile_marker"] / MPG, abs=0.01)
+    assert all(s["gallons_for_drive_from_origin"] == 0 for s in stops[1:])
+
+    # Fuel continuity between consecutive stops, starting from the first one.
+    for a, b in zip(stops, stops[1:]):
         burned = (b["mile_marker"] - a["mile_marker"]) / MPG
         assert b["fuel_on_arrival_gallons"] == pytest.approx(a["fuel_on_departure_gallons"] - burned, abs=0.02)
 
@@ -222,6 +227,20 @@ def test_short_route_single_stop(client, stations, upstream):
     assert d["route"]["distance_miles"] < 500
     assert d["summary"]["number_of_stops"] == 1
     assert d["summary"]["total_gallons_purchased"] == pytest.approx(d["route"]["distance_miles"] / MPG, abs=0.01)
+
+
+def test_start_window_stop_with_fuel_in_tank_reports_real_tank_level(client, stations, upstream):
+    # 20 gal at the start; the cheap start-window station is ~5 mi in.
+    d = post_route(client, start="Start City", finish="Finish City", initial_fuel_gallons=20).json()
+    first = d["fuel_stops"][0]
+    # 20 gal (200 mi) cannot reach the cheap station at ~212 mi, so the start-window station
+    # (~5 mi in) is used, and the tank still holds fuel when the truck gets there.
+    assert first["station"]["opis_id"] == 2 and first["mile_marker"] < 25
+    assert first["gallons_for_drive_from_origin"] == 0
+    assert first["fuel_on_arrival_gallons"] == pytest.approx(20 - first["mile_marker"] / MPG, abs=0.02)
+    for a, b in zip(d["fuel_stops"], d["fuel_stops"][1:]):
+        burned = (b["mile_marker"] - a["mile_marker"]) / MPG
+        assert b["fuel_on_arrival_gallons"] == pytest.approx(a["fuel_on_departure_gallons"] - burned, abs=0.02)
 
 
 def test_full_tank_short_route_needs_no_stop(client, stations, upstream):

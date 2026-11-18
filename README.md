@@ -75,7 +75,8 @@ The response below is real; only the `map` coordinates are shortened:
       "price_per_gallon": 2.75566666,
       "fuel_on_arrival_gallons": 0.0,
       "gallons_purchased": 23.848,
-      "fuel_on_departure_gallons": 23.848,
+      "gallons_for_drive_from_origin": 1.497,
+      "fuel_on_departure_gallons": 22.352,
       "cost": 65.72
     }
   ],
@@ -99,6 +100,7 @@ The response below is real; only the `map` coordinates are shortened:
 ```
 
 Check: 238.5 mi ÷ 10 mpg = 23.848 gal, and 23.848 gal × $2.75566666 = **$65.72**.
+The station is 15 miles from the origin and the trip starts with an empty tank, so 1.497 gal of that purchase pays for those first miles. The truck leaves with 23.848 − 1.497 = 22.352 gal, enough for the remaining 223.5 miles.
 
 ### Errors
 
@@ -179,7 +181,7 @@ If any stretch of the route has no station within 500 miles, the request fails w
 | Fuel used | route miles ÷ 10 |
 | Stop cost | `gallons_purchased × price_per_gallon` (rounded to cents) |
 | Total cost | sum of the stop costs |
-| Starting fuel | **Empty by default.** The first fill-up is at the cheapest station within the first `START_WINDOW_MILES` (25) of the route, and the fuel for those first miles is bought there, so every trip's fuel is paid for. Set `initial_fuel_gallons` to start with fuel in the tank. |
+| Starting fuel | **Empty by default.** The first fill-up is at the cheapest station within the first `START_WINDOW_MILES` (25) of the route, and the fuel for those first miles is bought there, so every trip's fuel is paid for. That share is reported as `gallons_for_drive_from_origin`, and `fuel_on_departure = fuel_on_arrival + gallons_purchased − gallons_for_drive_from_origin`. Set `initial_fuel_gallons` to start with fuel in the tank. |
 | Station location | The CSV has no coordinates, so each station is placed at its **city's centre** (see below) |
 | Detours | A station up to `CORRIDOR_MILES` (10) from the route counts as on the route; the short detour to it is not added to the distance |
 | Nearby duplicates | A station is skipped if an equal-or-cheaper station lies within `DOMINANCE_WINDOW_MILES` (15) along the route (see below) |
@@ -256,7 +258,7 @@ Measured on a laptop:
 python -m pytest
 ```
 
-There are 356 tests and they run in about 1 second. The external services are replaced by a fake, so tests never use the network; an unmocked HTTP call fails the test.
+There are 357 tests and they run in about 2 seconds. The external services are replaced by a fake, so tests never use the network; an unmocked HTTP call fails the test.
 
 - `test_optimizer.py`:
   - hand-worked examples;
