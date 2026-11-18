@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Spotter Fuel Route API",
+    "description": "Requests used in the demo. Set the baseUrl variable if the server is not on http://127.0.0.1:8000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "http://127.0.0.1:8000" }],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/health/" }
+    },
+    {
+      "name": "Stations - cheapest in Texas",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/stations/?state=TX&limit=10" }
+    },
+    {
+      "name": "Route - New York to Los Angeles (multiple stops)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/route/",
+        "body": { "mode": "raw", "raw": "{\n  \"start\": \"New York, NY\",\n  \"finish\": \"Los Angeles, CA\"\n}" }
+      }
+    },
+    {
+      "name": "Route - Dallas to Houston (short trip)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/route/",
+        "body": { "mode": "raw", "raw": "{\n  \"start\": \"Dallas, TX\",\n  \"finish\": \"Houston, TX\"\n}" }
+      }
+    },
+    {
+      "name": "Route - coordinates, half tank at start",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/route/",
+        "body": { "mode": "raw", "raw": "{\n  \"start\": \"41.8781,-87.6298\",\n  \"finish\": \"39.7392,-104.9903\",\n  \"initial_fuel_gallons\": 25\n}" }
+      }
+    },
+    {
+      "name": "Route - GET with query string",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/route/?start=Chicago, IL&finish=Denver, CO" }
+    },
+    {
+      "name": "Error - location outside the USA",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/route/",
+        "body": { "mode": "raw", "raw": "{\n  \"start\": \"Toronto, Canada\",\n  \"finish\": \"Chicago, IL\"\n}" }
+      }
+    },
+    {
+      "name": "Error - impossible journey (no stations in range)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/route/",
+        "body": { "mode": "raw", "raw": "{\n  \"start\": \"Anchorage, AK\",\n  \"finish\": \"Seattle, WA\"\n}" }
+      }
+    }
+  ]
+}
