@@ -50,8 +50,15 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   const map = L.map('map').setView([39.5, -98.35], 4);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: '&copy; OpenStreetMap contributors'
+  // OpenStreetMap tile usage policy (operations.osmfoundation.org/policies/tiles):
+  // use exactly this URL, and send a Referer. Django's default page header
+  // "Referrer-Policy: same-origin" strips the Referer from cross-site requests,
+  // and OSM answers those tiles with "403 Access blocked", so tile requests
+  // opt back in to sending the page origin.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
   }).addTo(map);
   let layer = null;
   const out = document.getElementById('out');
